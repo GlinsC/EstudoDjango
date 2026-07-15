@@ -1,4 +1,5 @@
 from django.http import JsonResponse
+from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import Usuario
@@ -19,6 +20,11 @@ def usuario_list(request):
     return JsonResponse(dados_json, safe=False)
 
 
+def usuario_render(request):
+    usuarios = Usuario.objects.all()
+    return render(request, 'usuario/index.html', {'usuarios': usuarios})
+
+
 @csrf_exempt
 def adicionar_usuario(request):
     print(request.body)
@@ -36,7 +42,24 @@ def adicionar_usuario(request):
         return JsonResponse({'message': 'Usuário adicionado com sucesso!'})
     else:
         return JsonResponse({'error': 'Método não permitido'}, status=405)
-     
+
+def adicionar_render(request):
+    print(request.POST)
+    if request.method == 'POST':
+        nome = request.POST.get('nome')
+        email = request.POST.get('email')
+        senha = request.POST.get('senha')
+        cpf = request.POST.get('cpf')
+
+        # Cria um novo objeto Usuario e salva no banco de dados
+        usuario1 = Usuario(nome=nome, email=email, senha=senha, cpf=cpf)
+        usuario1.save()
+
+        return redirect('usuario_render')
+    else:
+        return redirect('usuario_render')
+
+
 def buscar_usuario(request, usuario_id):
     try:
         usuario = Usuario.objects.get(id=usuario_id)
@@ -74,3 +97,20 @@ def deletar_usuario(request, usuario_id):
         return JsonResponse({'message': 'Usuário deletado com sucesso!'})
     except Usuario.DoesNotExist:
         return JsonResponse({'error': 'Usuário não encontrado'}, status=404)
+
+def buscar_usuario_por_email(request):
+    email = request.GET.get('email')
+    if email:
+        try:
+            usuario = Usuario.objects.get(email=email)
+            dados_json = {
+                'id': usuario.id,
+                'nome': usuario.nome,
+                'email': usuario.email,
+                'cpf': usuario.cpf,
+            }
+            return JsonResponse(dados_json)
+        except Usuario.DoesNotExist:
+            return JsonResponse({'error': 'Usuário não encontrado'}, status=404)
+    else:
+        return JsonResponse({'error': 'Parâmetro de email não fornecido'}, status=400)

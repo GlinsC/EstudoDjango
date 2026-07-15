@@ -1,0 +1,50 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios</title>
+    <link rel="stylesheet" href="{% static 'usuario/style.css' %}">
+</head>
+<body>
+    <h1>Usuarios</h1>
+    <ul class="usuario-list">
+        {% for usuario in usuarios %}
+            <li>{{ usuario.nome }} - {{ usuario.email }} - {{ usuario.cpf }} - {{ usuario.senha }} 
+            <button type="button" onclick="deletar_usuario('{{ usuario.id }}')">Deletar</button>
+            </li>
+        {% endfor %}
+    </ul>
+    <div class="container">
+        <h2>Adicionar Usuario</h2>
+        <form id="adicionar-usuario-form" action="{% url 'adicionar_render' %}" method="POST">
+            {% csrf_token %}
+            <input type="text" name="nome" placeholder="Nome" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="text" name="cpf" placeholder="CPF" required>
+            <input type="password" name="senha" placeholder="Senha" required>
+            <button type="submit">Adicionar</button>
+        </form>
+
+    </div>
+</body>
+<script>
+    function deletar_usuario(usuario_id) {
+        fetch(`{% url 'deletar_usuario' 0 %}`.replace('0', usuario_id), {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                console.error('Erro ao deletar usuário');
+            }
+        });
+    }
+</script>
+</html>
